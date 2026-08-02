@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dungeon Escape</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #12131C; 
+            color: #e94560; 
+            margin: 0;
+            padding: 30px 15px;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 25px;
+            max-width: 980px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .card { 
+            background: #1A1C29; 
+            padding: 25px; 
+            border-radius: 14px; 
+            width: 460px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6); 
+            border: 1px solid #2A2D3D;
+        }
+        .guide-card {
+            background: #181926;
+            padding: 22px;
+            border-radius: 14px;
+            width: 380px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid #27293A;
+            color: #d1d5db;
+        }
+        h1, h2 { text-align: center; margin-top: 0; color: #e94560; }
+        h2 { font-size: 20px; color: #4ecca3; border-bottom: 1px solid #27293A; padding-bottom: 10px; }
+        .stats { 
+            display: flex; 
+            justify-content: space-around; 
+            background: #0f3460; 
+            padding: 12px 8px; 
+            border-radius: 8px; 
+            color: #fff; 
+            font-weight: bold; 
+            font-size: 14px;
+        }
+        .log-box { 
+            background: #090A0F; 
+            color: #00ffcc; 
+            padding: 12px; 
+            text-align: left; 
+            height: 140px; 
+            border-radius: 8px; 
+            overflow-y: auto; 
+            font-family: 'Courier New', Courier, monospace; 
+            margin: 15px 0; 
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid #1f2233;
+        }
+        .btn-group { display: flex; justify-content: space-between; gap: 8px; }
+        .btn { 
+            flex: 1;
+            padding: 11px 0; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-attack { background: #e94560; }
+        .btn-heal { background: #27ae60; }
+        .btn-flee { background: #f39c12; }
+        .btn-reset { background: #e74c3c; width: 100%; margin-top: 10px; font-size: 15px; }
+
+        .guide-section { margin-bottom: 15px; }
+        .guide-title { font-weight: bold; color: #f39c12; margin-bottom: 5px; font-size: 14px; }
+        .guide-text { font-size: 13px; line-height: 1.5; color: #a0a5b5; margin: 0; }
+        .guide-list { padding-left: 18px; margin: 5px 0; font-size: 13px; color: #b8bcce; }
+        .guide-list li { margin-bottom: 4px; }
+
+        .banner-win {
+            background: #27ae60;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .banner-lose {
+            background: #c0392b;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- How to Play Guide Panel -->
+        <div class="guide-card">
+            <h2>📜 How to Play</h2>
+            
+            <div class="guide-section">
+                <div class="guide-title">🎯 Game Objective</div>
+                <p class="guide-text">Navigate through <strong>5 Dungeon Rooms</strong>, defeat monsters, collect gold, and survive to escape!</p>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">🕹️ Action Controls</div>
+                <ul class="guide-list">
+                    <li><strong>Attack:</strong> Deal 15-30 damage to the monster. The monster counters with a strike!</li>
+                    <li><strong>Heal:</strong> Spend 15 Gold to restore 25-40 HP.</li>
+                    <li><strong>Flee Room:</strong> 50% chance to jump to the next room without fighting.</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">🏆 How to Win</div>
+                <p class="guide-text">Reach <strong>Room 5 (Boss Room)</strong> and defeat the Boss. Fleeing is disabled in the final room!</p>
+            </div>
+        </div>
+
+        <!-- Main Game Panel -->
+        <div class="card">
+            <h1>🗡️ Dungeon Escape</h1>
+            
+            <div class="stats">
+                <span>Room: {{ room }}/5</span>
+                <span>Player HP: {{ hp }}/100</span>
+                <span>Monster HP: {{ monster_hp }}</span>
+                <span>Gold: 🪙{{ gold }}</span>
+            </div>
+
+            <div class="log-box">
+                {% for line in log %}
+                    <div>> {{ line }}</div>
+                {% endfor %}
+            </div>
+
+            {% if won %}
+                <div class="banner-win">🎉 Congratulations! You Escaped The Dungeon!</div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="reset" value="1" class="btn btn-reset">Play Again</button>
+                </form>
+            {% elif game_over %}
+                <div class="banner-lose">💀 Game Over! You Died In The Dungeon.</div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="reset" value="1" class="btn btn-reset">Restart Adventure</button>
+                </form>
+            {% else %}
+                <form method="POST" class="btn-group">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="attack" class="btn btn-attack">Attack</button>
+                    <button type="submit" name="action" value="heal" class="btn btn-heal">Heal (15 Gold)</button>
+                    <button type="submit" name="action" value="flee" class="btn btn-flee">Flee Room</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
