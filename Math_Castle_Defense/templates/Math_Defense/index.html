@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Castle Defense</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0B0E14;
+            color: #E6EDF3;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 25px;
+            max-width: 980px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: #151B23;
+            padding: 25px;
+            border-radius: 14px;
+            width: 480px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            border: 1px solid #30363D;
+            text-align: center;
+        }
+        .guide-card {
+            background: #151B23;
+            padding: 22px;
+            border-radius: 14px;
+            width: 380px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid #30363D;
+            color: #8B949E;
+        }
+        h1 { margin-top: 0; color: #F0883E; font-size: 24px; }
+        h2 { font-size: 18px; color: #3FB950; border-bottom: 1px solid #30363D; padding-bottom: 10px; margin-top: 0; }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #21262D;
+            padding: 12px 8px;
+            border-radius: 8px;
+            color: #FFF;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 15px;
+            border: 1px solid #30363D;
+        }
+
+        .problem-box {
+            background: #1F2937;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #F0883E;
+            margin-bottom: 15px;
+        }
+        .problem-title { font-size: 13px; color: #9CA3AF; margin-bottom: 5px; }
+        .problem-text { font-size: 32px; font-weight: bold; color: #58A6FF; letter-spacing: 2px; }
+
+        .log-box {
+            background: #0D1117;
+            color: #3FB950;
+            padding: 12px;
+            text-align: left;
+            height: 120px;
+            border-radius: 8px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid #21262D;
+        }
+
+        .input-group { display: flex; gap: 8px; justify-content: center; }
+        .input-field {
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 6px;
+            border: 1px solid #30363D;
+            background: #0D1117;
+            color: #FFF;
+            text-align: center;
+            font-weight: bold;
+            width: 180px;
+        }
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .btn-fire { background: #D97706; }
+        .btn-fire:hover { background: #F59E0B; }
+        .btn-reset { background: #DC2626; width: 100%; margin-top: 10px; font-size: 15px; }
+
+        .banner-win { background: #059669; color: white; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 12px; }
+        .banner-lose { background: #DC2626; color: white; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 12px; }
+
+        .guide-section { margin-bottom: 15px; }
+        .guide-title { font-weight: bold; color: #F59E0B; margin-bottom: 5px; font-size: 14px; }
+        .guide-text { font-size: 13px; line-height: 1.5; color: #8B949E; margin: 0; }
+        .guide-list { padding-left: 18px; margin: 5px 0; font-size: 13px; color: #8B949E; }
+        .guide-list li { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- How to Play Guide Panel -->
+        <div class="guide-card">
+            <h2>📜 How to Play</h2>
+
+            <div class="guide-section">
+                <div class="guide-title">🎯 Game Objective</div>
+                <p class="guide-text">Protect your Castle from <strong>5 Enemy Waves</strong> by solving math equations to fire cannonballs!</p>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">🕹️ Game Mechanics</div>
+                <ul class="guide-list">
+                    <li><strong>Correct Answer:</strong> Fires cannon, deals 20-35 damage to monster, and awards +50 Score.</li>
+                    <li><strong>Wrong Answer:</strong> Cannon misses! Monster strikes your castle!</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">🏆 How to Win</div>
+                <p class="guide-text">Survive and defeat all monsters through <strong>Wave 5 (Boss Wave)</strong> while keeping Castle HP above 0.</p>
+            </div>
+        </div>
+
+        <!-- Main Game Card -->
+        <div class="card">
+            <h1>🏰 Math Castle Defense</h1>
+
+            <div class="stats">
+                <span>Wave: {{ wave }}/5</span>
+                <span>Castle HP: 🏰{{ castle_hp }}/100</span>
+                <span>Monster HP: 👾{{ monster_hp }}</span>
+                <span>Score: ⭐{{ score }}</span>
+            </div>
+
+            <div class="log-box">
+                {% for line in log %}
+                    <div>> {{ line }}</div>
+                {% endfor %}
+            </div>
+
+            {% if won %}
+                <div class="banner-win">🎉 VICTORY! Castle Defended & Boss Defeated!</div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="reset" value="1" class="btn btn-reset">Play Again</button>
+                </form>
+            {% elif game_over %}
+                <div class="banner-lose">💀 DEFEAT! Your Castle Has Fallen.</div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="reset" value="1" class="btn btn-reset">Try Again</button>
+                </form>
+            {% else %}
+                <div class="problem-box">
+                    <div class="problem-title">SOLVE TO FIRE CANNON:</div>
+                    <div class="problem-text">{{ problem }} = ?</div>
+                </div>
+
+                <form method="POST" class="input-group">
+                    {% csrf_token %}
+                    <input type="number" name="answer" class="input-field" placeholder="Answer" required autofocus autocomplete="off">
+                    <button type="submit" class="btn btn-fire">🔥 Fire Cannon</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
