@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Word Cipher - Codebreaker Challenge</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #0D1117; 
+            color: #C9D1D9; 
+            margin: 0; 
+            padding: 30px 15px; 
+        }
+        .container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            gap: 25px; 
+            max-width: 980px; 
+            margin: 0 auto; 
+            flex-wrap: wrap; 
+        }
+        .card { 
+            background: #161B22; 
+            padding: 25px; 
+            border-radius: 14px; 
+            width: 480px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6); 
+            border: 1px solid #30363D; 
+            text-align: center;
+        }
+        .guide-card { 
+            background: #161B22; 
+            padding: 22px; 
+            border-radius: 14px; 
+            width: 380px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
+            border: 1px solid #30363D; 
+            color: #8B949E; 
+        }
+        h1 { margin-top: 0; color: #58A6FF; font-size: 24px; }
+        h2 { font-size: 18px; color: #3FB950; border-bottom: 1px solid #30363D; padding-bottom: 10px; margin-top: 0; }
+        
+        .grid { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; align-items: center; }
+        .row { display: flex; gap: 6px; }
+        .tile { 
+            width: 45px; 
+            height: 45px; 
+            border: 2px solid #30363D; 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 20px; 
+            color: #FFF; 
+            background: #0D1117; 
+            text-transform: uppercase;
+        }
+        .tile.correct { background: #238636; border-color: #2E9D40; }
+        .tile.present { background: #9E6A03; border-color: #B57A05; }
+        .tile.absent { background: #21262D; border-color: #30363D; color: #484F58; }
+
+        .message-box { 
+            background: #21262D; 
+            color: #58A6FF; 
+            padding: 10px; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            border: 1px solid #30363D;
+        }
+
+        .input-group { display: flex; gap: 8px; justify-content: center; }
+        .input-field { 
+            padding: 10px; 
+            font-size: 16px; 
+            border-radius: 6px; 
+            border: 1px solid #30363D; 
+            background: #0D1117; 
+            color: #FFF; 
+            text-align: center; 
+            letter-spacing: 3px; 
+            font-weight: bold; 
+            width: 220px;
+            text-transform: uppercase;
+        }
+        .btn { 
+            padding: 10px 18px; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 14px; 
+            transition: 0.2s; 
+        }
+        .btn-submit { background: #238636; }
+        .btn-submit:hover { background: #2EA043; }
+        .btn-reset { background: #DA3633; width: 100%; margin-top: 10px; font-size: 15px; }
+
+        .guide-section { margin-bottom: 15px; }
+        .guide-title { font-weight: bold; color: #D29922; margin-bottom: 5px; font-size: 14px; }
+        .guide-text { font-size: 13px; line-height: 1.5; color: #8B949E; margin: 0; }
+        .color-demo { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; }
+        .mini-tile { width: 22px; height: 22px; border-radius: 4px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="guide-card">
+            <h2>📜 How to Play</h2>
+            
+            <div class="guide-section">
+                <div class="guide-title">🎯 Game Objective</div>
+                <p class="guide-text">Guess the secret <strong>6-letter word</strong> in 6 attempts or fewer!</p>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">🎨 Color Feedback</div>
+                <div class="color-demo">
+                    <span class="mini-tile" style="background:#238636;"></span>
+                    <span><strong>Green:</strong> Right letter in correct spot.</span>
+                </div>
+                <div class="color-demo">
+                    <span class="mini-tile" style="background:#9E6A03;"></span>
+                    <span><strong>Yellow:</strong> Letter in word, wrong spot.</span>
+                </div>
+                <div class="color-demo">
+                    <span class="mini-tile" style="background:#21262D;"></span>
+                    <span><strong>Gray:</strong> Letter not in secret word.</span>
+                </div>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">💡 Hint</div>
+                <p class="guide-text">Words are common programming/tech terms (e.g., PYTHON, CIPHER, SERVER).</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h1>🔐 Word Cipher</h1>
+            
+            <div class="message-box">{{ message }}</div>
+
+            <div class="grid">
+                {% for attempt in attempts %}
+                    <div class="row">
+                        {% for cell in attempt.feedback %}
+                            <div class="tile {{ cell.status }}">{{ cell.letter }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                {% if not game_over and remaining_attempts > 0 %}
+                    <div class="row">
+                        {% for i in "123456" %}
+                            <div class="tile">?</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if game_over %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="reset" value="1" class="btn btn-reset">Play Again</button>
+                </form>
+            {% else %}
+                <form method="POST" class="input-group">
+                    {% csrf_token %}
+                    <input type="text" name="guess" class="input-field" maxlength="6" placeholder="______" required autofocus autocomplete="off">
+                    <button type="submit" class="btn btn-submit">Submit</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
